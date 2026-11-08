@@ -1,9 +1,18 @@
 // use prisma-8
-
 model User {
+  id            Int                        @id @default(autoincrement())
+  email         String                     @unique
+  name          String?
+  refreshTokens RefreshToken[]
+  createdAt     TimestamptzString          @default(now())
+  updatedAt     temporal.updatedAtString()
+}
+
+model RefreshToken {
   id        Int               @id @default(autoincrement())
-  email     String            @unique
-  name      String?
+  userId    Int
+  user      User              @relation(fields: [userId], references: [id])
+  tokenHash String            @unique
+  expiresAt TimestamptzString
   createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
 }
