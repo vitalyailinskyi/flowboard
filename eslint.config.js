@@ -22,5 +22,11 @@ export default tseslint.config(
 		languageOptions: {parserOptions: {parser: tseslint.parser}},
 	},
 	{languageOptions: {globals: {...globals.node, ...globals.browser}}},
+	{
+		rules: {
+			// Express определяет обработчик ошибок по 4 параметрам, поэтому неиспользуемый _next нужен
+			"@typescript-eslint/no-unused-vars": ["error", {argsIgnorePattern: "^_"}],
+		},
+	},
 	prettier,
 );
