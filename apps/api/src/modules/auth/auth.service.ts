@@ -35,3 +35,38 @@ export async function login({ email, password }: LoginInput) {
   const user = { id: found.id, email: found.email, name: found.name };
   return { user, ...(await issueTokens(user.id)) };
 }
+
+export async function refresh(rawToken?: string) {
+  if (!rawToken) throw new AppError(401, 'No refresh token');
+  const tokens = db.orm.public.RefreshToken;
+
+  const stored = await tokens.where({ tokenHash: hashToken(rawToken) }).first();
+  if (!stored) throw new AppError(401, 'Invalid refresh token');
+
+  if (stored.revokedAt) {
+    await tokens.where({ userId: stored.userId }).deleteAll();
+    throw new AppError(401, 'Refresh token reuse detected');
+  }
+  if (new Date(stored.expiresAt) < new Date()) {
+    throw new AppError(401, 'Refresh token expired');
+  }
+
+  await tokens.where({ id: stored.id }).update({ revokedAt: new Date().toISOString() });
+
+  const user = await db.orm.public.User.where({ id: stored.userId })
+    .select('id', 'email', 'name')
+    .first();
+  if (!user) throw new AppError(401, 'User not found');
+  return { user, ...(await issueTokens(user.id)) };
+}
+
+export async function logout(rawToken?: string) {
+  if (!rawToken) return;
+  await db.orm.public.RefreshToken.where({ tokenHash: hashToken(rawToken) }).delete();
+}
+
+export async function getMe(userId: number) {
+  const user = await db.orm.public.User.where({ id: userId }).select('id', 'email', 'name').first();
+  if (!user) throw new AppError(401, 'User not found');
+  return user;
+}

@@ -16,4 +16,5 @@ model RefreshToken {
   tokenHash String            @unique
   expiresAt TimestamptzString
   createdAt TimestamptzString @default(now())
+  revokedAt TimestamptzString?
 }
