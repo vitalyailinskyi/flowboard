@@ -3,6 +3,7 @@ model User {
   id            Int                        @id @default(autoincrement())
   email         String                     @unique
   name          String?
+  passwordHash  String
   refreshTokens RefreshToken[]
   createdAt     TimestamptzString          @default(now())
   updatedAt     temporal.updatedAtString()
